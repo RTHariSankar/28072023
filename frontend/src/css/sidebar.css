@@ -1,0 +1,7 @@
+.navbar-nav li a:hover{
+    background-color: rgb(38, 38, 203);
+    color:black;
+}
+.container-fluid{
+    position:relative
+}
