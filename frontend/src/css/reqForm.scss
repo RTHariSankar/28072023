@@ -1,0 +1,29 @@
+.admin {
+    display: flex;
+  
+    .adminContainer {
+      flex: 6;
+        
+      .reqForm{
+        border: 1px dotted #6439ff;
+        margin-right: 120px;
+        margin-left: 120px;
+        padding: 10px;
+        display: flex;
+        justify-content: center;
+        margin-top: 110px;
+
+        .Button{
+            margin-left: 150px;
+            background-color: #6439ff;
+            color: white;
+
+            &:hover{
+                background-color:#463289 ;
+            }
+        }
+    }
+
+    }
+  }
+  

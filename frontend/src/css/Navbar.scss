@@ -1,0 +1,48 @@
+.navbar {
+    height: 86px;
+    border-bottom: 0.5px solid rgb(231, 228, 228);
+    display: flex;
+    align-items: center;
+    color: #555;
+  
+    .wrapper {
+      width: 100%;
+      padding: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+  
+      .dashboard {
+        display: flex;
+        align-items: center;
+        padding: 6px;
+  
+        
+      }
+  
+      .items {
+        display: flex;
+        align-items: center;
+  
+        .item {
+          display: flex;
+          align-items: center;
+          margin-right: 20px;
+          position: relative;
+  
+          .icon {
+            font-size: 40px;
+            border:1px ;
+            border-radius: 15px;
+            padding: 2px;
+            cursor: pointer;
+            
+          }
+  
+         
+  
+          
+        }
+      }
+    }
+  }
