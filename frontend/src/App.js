@@ -1,20 +1,20 @@
-import AdminHome from "./components/AdminHome";
-import FacultyHome from "./components/FacultyHome";
-import Login from "./components/Login";
-import {BrowserRouter,Routes,Route} from 'react-router-dom'
-import Requirementform from "./components/Requirementform";
-import UpdateAdmin from "./components/UpdateAdmin";
+import Admin from "./pages/Admin";
+import Faculty from "./pages/Faculty";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
+import ReqForm from "./pages/ReqForm";
+import Curriculum from "./pages/Curriculum";
+import Login from "./pages/Login";
 
 function App() {
   return (
     <div>
       <BrowserRouter>
         <Routes>
-          <Route path='/' element={<Login/>}/>
-          <Route path="/admin" element={<AdminHome/>}/>
-          <Route path="/reqForm" element={<Requirementform/>}/>
-          <Route path="/faculty" element={<FacultyHome/>}/>
-          <Route path="/updateAdmin" element={<UpdateAdmin/>}/> 
+          <Route path="/" element={<Login />} />
+          <Route path="/admin" element={<Admin />} />
+          <Route path="/faculty" element={<Faculty />} />
+          <Route path="/reqForm" element={<ReqForm />} />
+          <Route path="/curriculum" element={<Curriculum />} />
         </Routes>
       </BrowserRouter>
     </div>
