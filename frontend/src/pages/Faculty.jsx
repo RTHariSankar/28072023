@@ -20,6 +20,7 @@ const Faculty = () => {
   const [input, setInput] = useState([]);
   const [filteredData, setFilteredData] = useState([]);
   const userToken = sessionStorage.getItem("userToken");
+  const userId = sessionStorage.getItem("userId");
 
   useEffect(() => {
     fetchDataFromDatabase();
@@ -27,7 +28,9 @@ const Faculty = () => {
 
   const fetchDataFromDatabase = () => {
     axios
+      // .get(`/api/viewdata/${userToken}`)
       .get(`http://localhost:5000/api/viewdata/${userToken}`)
+
       .then((response) => {
         setInput(response.data.data);
         setFilteredData(response.data.data);
@@ -62,11 +65,18 @@ const Faculty = () => {
   };
 
   const deleteClicked = (val) => {
-    if (val.curriculumApproved === "Not Approved") {
+    if (
+      val.curriculumApproved === "Approved" &&
+      userId !== "64bf73a1f8cf24a4a8c9118f"
+    ) {
+      alert("Admin approval is needed to delete this curriculum");
+    } else {
       val.curriculumDescription = "Type here";
       try {
         axios
+          // .put(`/api/updateRequirement/${val._id}`, val)
           .put(`http://localhost:5000/api/updateRequirement/${val._id}`, val)
+
           .then((response) => {
             if (response.data.message === "Requirement Updated successfully") {
               alert("Curriculum deleted successfully");
@@ -81,8 +91,6 @@ const Faculty = () => {
       } catch (error) {
         console.error(error);
       }
-    } else {
-      alert("Admin approval is needed to delete this curriculum");
     }
   };
 

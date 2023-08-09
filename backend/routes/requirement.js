@@ -1,15 +1,15 @@
-const express = require('express');
+const express = require("express");
 const input = express();
-const jwt = require('jsonwebtoken');
+const jwt = require("jsonwebtoken");
 
 input.use(express.json());
 input.use(express.urlencoded({ extended: true }));
 
-const curriculumData = require('../model/curriculum');
+const curriculumData = require("../model/curriculum");
 
 // ADMIN REQUIREMENT POST
 
-input.post('/requirementAdminPost', async (req, res) => {
+input.post("/requirementAdminPost", async (req, res) => {
   try {
     const val = req.body;
     const newRequirement = new curriculumData(val);
@@ -17,13 +17,13 @@ input.post('/requirementAdminPost', async (req, res) => {
     res.status(200).json({ message: "Requirement added successfully" });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ error: 'Unable to add requirement to database' });
+    res.status(500).json({ error: "Unable to add requirement to database" });
   }
 });
 
 // ADMIN VIEW REQUIREMENT
 
-input.get('/viewdata/:token', async (req, res) => {
+input.get("/viewdata/:token", async (req, res) => {
   try {
     const searchQuery = {};
 
@@ -42,89 +42,100 @@ input.get('/viewdata/:token', async (req, res) => {
 
     const data = await curriculumData.find(searchQuery);
     try {
-      jwt.verify(req.params.token, 'ictak',(error,decoded)=>{
+      jwt.verify(req.params.token, "ictak", (error, decoded) => {
         if (decoded && decoded.email) {
           res.status(200).json({
-            message: 'Data fetched successfully',
+            message: "Data fetched successfully",
             data: data,
           });
         } else {
-          res.status(500).json({message:'Unauthorized user'})
+          res.status(500).json({ message: "Unauthorized user" });
         }
-      })
+      });
     } catch (error) {
       res.status(500).json({
-        error: error
+        error: error,
       });
     }
-    
   } catch (error) {
     console.error(error);
-    res.status(500).json({ error: 'Unable to fetch data from database' });
+    res.status(500).json({ error: "Unable to fetch data from database" });
   }
 });
-
-
 
 // ADMIN DELETE REQUIREMENT
 
-input.delete('/deletepost/:_id', async (req, res) => {
+input.delete("/deletepost/:_id", async (req, res) => {
   try {
     let id = req.params._id;
     await curriculumData.findByIdAndDelete(id);
-    res.status(200).json({ message: 'Curriculum deleted successfully' });
+    res.status(200).json({ message: "Curriculum deleted successfully" });
   } catch (error) {
     console.error(error);
-    res.status(500).json('Error!!! Data not deleted');
+    res.status(500).json("Error!!! Data not deleted");
   }
 });
 
-// ADMIN UPDATE REQUIREMENT
-
-input.put('/updateRequirement/:id', async(req,res)=>{
+input.put("/updateRequirement/:id", async (req, res) => {
   try {
     const id = req.params.id;
-    let updateData = {$set: req.body};
-    await curriculumData.findByIdAndUpdate(id,updateData);
-    res.status(200).json({message:'Requirement Updated successfully'})
-
+    const updatedData = {
+      $set: {
+        trainingName: req.body.trainingName,
+        trainingArea: req.body.trainingArea,
+        trainingCategory: req.body.trainingCategory,
+        trainingInstitution: req.body.trainingInstitution,
+        trainingHours: req.body.trainingHours,
+        curriculumDescription: req.body.curriculumDescription,
+        curriculumFile: req.body.curriculumFile,
+        curriculumApproved: req.body.curriculumApproved,
+      },
+    };
+    await curriculumData.findByIdAndUpdate(id, updatedData);
+    res.status(200).json({ message: "Requirement Updated successfully" });
   } catch (error) {
     console.error(error);
-    res.status(500).json({message:'Requirement unable to update'})
-    
+    res.status(500).json({ message: "Requirement unable to update" });
   }
-})
+});
 
 // SEARCH BAR OPTIONS
 
-input.get('/options', async (req, res) => {
+input.get("/options", async (req, res) => {
   try {
     const options = {};
 
     // Fetch distinct values for trainingName
-    options.trainingNames = await curriculumData.distinct('trainingName').exec();
+    options.trainingNames = await curriculumData
+      .distinct("trainingName")
+      .exec();
 
     // Fetch distinct values for trainingArea
-    options.trainingAreas = await curriculumData.distinct('trainingArea').exec();
+    options.trainingAreas = await curriculumData
+      .distinct("trainingArea")
+      .exec();
 
     // Fetch distinct values for trainingCategory
-    options.trainingCategories = await curriculumData.distinct('trainingCategory').exec();
+    options.trainingCategories = await curriculumData
+      .distinct("trainingCategory")
+      .exec();
 
     // Fetch distinct values for trainingInstitution
-    options.trainingInstitutions = await curriculumData.distinct('trainingInstitution').exec();
+    options.trainingInstitutions = await curriculumData
+      .distinct("trainingInstitution")
+      .exec();
 
     res.status(200).json(options);
-    console.log(options)
   } catch (error) {
     console.error(error);
-    res.status(500).json({ message: 'Failed to fetch options' });
+    res.status(500).json({ message: "Failed to fetch options" });
   }
 });
 
 // Error handling middleware
 input.use((err, req, res, next) => {
   console.error(err); // Log the error for debugging purposes
-  res.status(500).json({ error: 'Internal Server Error' });
+  res.status(500).json({ error: "Internal Server Error" });
 });
 
 module.exports = input;

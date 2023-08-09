@@ -46,7 +46,9 @@ const ReqForm = () => {
     if (location.state && location.state.updateData) {
       axios
         .put(
+          // `/api/updateRequirement/${location.state.updateData._id}`,
           `http://localhost:5000/api/updateRequirement/${location.state.updateData._id}`,
+
           input
         )
         .then((response) => {
@@ -62,7 +64,9 @@ const ReqForm = () => {
         });
     } else {
       axios
+        // .post("/api/requirementAdminPost", input)
         .post("http://localhost:5000/api/requirementAdminPost", input)
+
         .then((response) => {
           if (response.data.message === "Requirement added successfully") {
             alert(response.data.message);

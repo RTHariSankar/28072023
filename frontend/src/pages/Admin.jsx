@@ -24,15 +24,17 @@ const Admin = () => {
 
   useEffect(() => {
     fetchDataFromDatabase();
-  }, []);
+  },[]);
 
   const fetchDataFromDatabase = () => {
     axios
+      // .get(`/api/viewdata/${userToken}`)
       .get(`http://localhost:5000/api/viewdata/${userToken}`)
+
       .then((response) => {
         const data = response.data.data;
         setInput(data);
-        setFilteredData(data); // Update filteredData with the initial data
+        setFilteredData(data);
       })
       .catch((error) => {
         console.error(error);
@@ -47,7 +49,9 @@ const Admin = () => {
 
   const deleteClicked = (id) => {
     axios
+      // .delete(`/api/deletepost/${id}`)
       .delete(`http://localhost:5000/api/deletepost/${id}`)
+
       .then((response) => {
         if (response.data.message === "Curriculum deleted successfully") {
           alert(response.data.message);
@@ -69,7 +73,6 @@ const Admin = () => {
 
   const applySearchFilters = (searchParams) => {
     const filtered = input.filter((val) => {
-      // Apply search filters here based on searchParams object
       return (
         (searchParams.trainingName === "" ||
           val.trainingName.includes(searchParams.trainingName)) &&
@@ -92,7 +95,9 @@ const Admin = () => {
 
       try {
         axios
+          // .put(`/api/updateRequirement/${val._id}`, val)
           .put(`http://localhost:5000/api/updateRequirement/${val._id}`, val)
+
           .then((response) => {
             if (response.data.message === "Requirement Updated successfully") {
               alert(response.data.message);
@@ -111,7 +116,9 @@ const Admin = () => {
       val.curriculumApproved = "Not Approved";
       try {
         axios
+          // .put(`/api/updateRequirement/${val._id}`, val)
           .put(`http://localhost:5000/api/updateRequirement/${val._id}`, val)
+
           .then((response) => {
             if (response.data.message === "Requirement Updated successfully") {
               alert(response.data.message);

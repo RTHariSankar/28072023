@@ -72,6 +72,8 @@ const Searchbar = ({ onSearch, onSearchResults }) => {
   const fetchOptionsFromDatabase = () => {
     axios
       .get("http://localhost:5000/api/options")
+      // .get("/api/options")
+
       .then((response) => {
         const {
           trainingNames,
@@ -101,7 +103,9 @@ const Searchbar = ({ onSearch, onSearchResults }) => {
 
   const performSearch = () => {
     axios
+      // .get("/api/viewdata", { params: search })
       .get("http://localhost:5000/api/viewdata", { params: search })
+
       .then((response) => {
         const searchResults = response.data;
         onSearchResults(searchResults);

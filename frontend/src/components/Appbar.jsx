@@ -1,5 +1,5 @@
 import { useNavigate } from "react-router-dom";
-import React from 'react'
+import React from "react";
 
 import AppBar from "@mui/material/AppBar";
 import Box from "@mui/material/Box";
@@ -11,8 +11,9 @@ const Appbar = () => {
   const nav = useNavigate();
 
   const logout = () => {
-    nav('/');
-  }
+    sessionStorage.clear();
+    nav("/");
+  };
   return (
     <div>
       <Box sx={{ flexGrow: 1 }}>
@@ -23,14 +24,16 @@ const Appbar = () => {
             ml: { sm: `240px` },
           }}
           style={{
-            backgroundColor:'#6439ff'
+            backgroundColor: "#6439ff",
           }}
         >
           <Toolbar>
             <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
               CURRICULUM DASHBOARD
             </Typography>
-            <Button color="inherit" variant="outlined" onClick={logout}>LogOut</Button>
+            <Button color="inherit" variant="outlined" onClick={logout}>
+              LogOut
+            </Button>
           </Toolbar>
         </AppBar>
       </Box>

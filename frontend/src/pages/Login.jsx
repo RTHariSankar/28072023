@@ -39,10 +39,12 @@ const Login = () => {
   const loginHandler = (e) => {
     e.preventDefault();
     const loginValidationErrors = validateLoginFields();
-    console.log("Validation signInErrors:", loginValidationErrors);
+
     if (loginValidationErrors) {
       axios
+        // .post("/api/login", loginUser)
         .post("http://localhost:5000/api/login", loginUser)
+
         .then((response) => {
           try {
             if (response.data.message === "Login successful") {
@@ -66,6 +68,13 @@ const Login = () => {
         .catch((error) => {
           console.error(error);
         });
+    } else {
+      const errorMessages = Object.values(loginErrors).join("\n");
+      if (errorMessages.trim() !== "") {
+        alert(errorMessages);
+      } else {
+        alert("Please fill in all the required fields.");
+      }
     }
   };
 
@@ -87,7 +96,6 @@ const Login = () => {
       }
 
       setLoginErrors(newLoginErrors);
-      console.log(Object.keys(newLoginErrors).length);
 
       return Object.keys(newLoginErrors).length === 0;
     }
@@ -107,6 +115,32 @@ const Login = () => {
     });
   };
 
+  // const validateFieldsSignIn = () => {
+  //   const { name, email, password, confirmPassword } = signInInputs;
+  //   const newErrorsSignIn = {};
+
+  //   if (!name) {
+  //     newErrorsSignIn.name = "Please enter your name!";
+  //   }
+
+  //   if (!email) {
+  //     newErrorsSignIn.email = "Please enter your email!";
+  //   } else if (!/\S+@\S+\.\S+/.test(email)) {
+  //     newErrorsSignIn.email = "Please enter a valid email address!";
+  //   }
+  //   if (!password) {
+  //     newErrorsSignIn.password = "Please enter your password!";
+  //   }
+  //   if (!confirmPassword) {
+  //     newErrorsSignIn.confirmPassword = "Please confirm your password!";
+  //   } else if (password !== confirmPassword) {
+  //     newErrorsSignIn.confirmPassword = "Passwords do not match!";
+  //   }
+  //   setSignInErrors(newErrorsSignIn);
+  //   return Object.keys(newErrorsSignIn).length === 0;
+  // };
+
+
   const validateFieldsSignIn = () => {
     const { name, email, password, confirmPassword } = signInInputs;
     const newErrorsSignIn = {};
@@ -114,7 +148,6 @@ const Login = () => {
     if (!name) {
       newErrorsSignIn.name = "Please enter your name!";
     }
-
     if (!email) {
       newErrorsSignIn.email = "Please enter your email!";
     } else if (!/\S+@\S+\.\S+/.test(email)) {
@@ -122,29 +155,34 @@ const Login = () => {
     }
     if (!password) {
       newErrorsSignIn.password = "Please enter your password!";
+    } else {
+      const passwordStrength = getPasswordStrength(password);
+      // newErrorsSignIn.passwordStrength = passwordStrength;
+      if (passwordStrength !== "strong") {
+        newErrorsSignIn.password = "Please enter a stronger password!";
+      }
     }
     if (!confirmPassword) {
       newErrorsSignIn.confirmPassword = "Please confirm your password!";
     } else if (password !== confirmPassword) {
       newErrorsSignIn.confirmPassword = "Passwords do not match!";
     }
-    setSignInErrors(newErrorsSignIn);
-    console.log(Object.keys(newErrorsSignIn).length);
 
+    setSignInErrors(newErrorsSignIn);
     return Object.keys(newErrorsSignIn).length === 0;
   };
 
-  const getPasswordStrengthColor = () => {
-    const passwordStrength = getPasswordStrength(signInInputs.password);
+  // const getPasswordStrengthColor = () => {
+  //   const passwordStrength = getPasswordStrength(signInInputs.password);
 
-    if (passwordStrength === "strong") {
-      return "green";
-    } else if (passwordStrength === "medium") {
-      return "orange";
-    } else {
-      return "red";
-    }
-  };
+  //   if (passwordStrength === "strong") {
+  //     return "green";
+  //   } else if (passwordStrength === "medium") {
+  //     return "orange";
+  //   } else {
+  //     return "red";
+  //   }
+  // };
 
   const getPasswordStrength = (password) => {
     const hasUppercase = /[A-Z]/.test(password);
@@ -166,23 +204,21 @@ const Login = () => {
   const signInHandler = (e) => {
     e.preventDefault();
     const validationErrors = validateFieldsSignIn();
-    console.log("Validation signInErrors:", validationErrors);
-
     if (validationErrors) {
       let data = {
         name: signInInputs.name,
         email: signInInputs.email,
         password: signInInputs.password,
       };
-      console.log("onsubmit", data);
-
       axios
+        // .post("/api/signup", data)
         .post("http://localhost:5000/api/signup", data)
+
         .then((response) => {
           console.log("Server Response:", response.data);
           if (response.data.message === "Registered Successfully!!!") {
             alert(response.data.message);
-            // navigate('/');
+            handleSignInClick();
           } else {
             alert(response.data.message);
           }
@@ -190,6 +226,14 @@ const Login = () => {
         .catch((err) => {
           console.log("Error:", err);
         });
+    } else {
+      // Check if the error messages are not empty
+      const errorMessages = Object.values(signInErrors).join("\n");
+      if (errorMessages.trim() !== "") {
+        alert(errorMessages);
+      } else {
+        alert("Please fill in all the required fields.");
+      }
     }
   };
 
@@ -207,16 +251,8 @@ const Login = () => {
                 placeholder="Email"
                 value={loginUser.email || ""}
                 name="email"
-                className={`form-control ${
-                  loginErrors.email ? "is-invalid" : ""
-                }`}
                 onChange={inputHandlerLogin}
               />
-              {loginErrors.email && (
-                <div className="invalid-feedback d-block">
-                  {loginErrors.email}
-                </div>
-              )}
             </div>
             <div className="input-field">
               <i className="fas fa-lock"></i>
@@ -224,17 +260,9 @@ const Login = () => {
                 type={showPassword ? "text" : "password"}
                 name="password"
                 value={loginUser.password || ""}
-                className={`form-control ${
-                  loginErrors.password ? "is-invalid" : ""
-                }`}
                 onChange={inputHandlerLogin}
                 placeholder="Password"
               />
-              {loginErrors.password && (
-                <div className="invalid-feedback d-block">
-                  {loginErrors.password}
-                </div>
-              )}
             </div>
             <div className="form-check">
               <input
@@ -245,7 +273,7 @@ const Login = () => {
                 onChange={toggleShowPassword}
               />
               <label className="form-check-label" htmlFor="showPassword">
-                Show Password
+                &nbsp;Show Password
               </label>
             </div>
             <button type="submit" className="btn solid">
@@ -266,11 +294,6 @@ const Login = () => {
                 onChange={sinputHandlerSignIn}
                 placeholder="Name"
               />
-              {signInErrors.name && (
-                <div className="invalid-feedback d-block">
-                  {signInErrors.name}
-                </div>
-              )}
             </div>
             <div className="input-field">
               <i className="fas fa-envelope"></i>
@@ -282,14 +305,8 @@ const Login = () => {
                   signInErrors.email ? "is-invalid" : ""
                 }`}
                 onChange={sinputHandlerSignIn}
-                required
                 placeholder="Email"
               />
-              {signInErrors.email && (
-                <div className="invalid-feedback d-block">
-                  {signInErrors.email}
-                </div>
-              )}
             </div>
             <div className="input-field">
               <i className="fas fa-lock"></i>
@@ -302,20 +319,13 @@ const Login = () => {
                 }`}
                 id="yourPassword"
                 onChange={sinputHandlerSignIn}
-                required
               />
-              {signInErrors.password && (
-                <div className="invalid-feedback d-block">
-                  {signInErrors.password}
-                </div>
-              )}
-
-              {signInInputs.password && (
+              {/* {signInInputs.password && (
                 <div style={{ color: getPasswordStrengthColor() }}>
                   Password Strength:{" "}
                   {getPasswordStrength(signInInputs.password)}
                 </div>
-              )}
+              )} */}
             </div>
             <div className="input-field">
               <i className="fas fa-lock"></i>
@@ -328,13 +338,7 @@ const Login = () => {
                 }`}
                 id="confirmPassword"
                 onChange={sinputHandlerSignIn}
-                required
               />
-              {signInErrors.confirmPassword && (
-                <div className="invalid-feedback d-block">
-                  {signInErrors.confirmPassword}
-                </div>
-              )}
             </div>
             <div className="form-check">
               <input
@@ -345,7 +349,7 @@ const Login = () => {
                 onChange={toggleShowPassword}
               />
               <label className="form-check-label" htmlFor="showConfirmPassword">
-                Show Password
+                &nbsp;Show Password
               </label>
             </div>
             <button type="submit" className="btn solid">

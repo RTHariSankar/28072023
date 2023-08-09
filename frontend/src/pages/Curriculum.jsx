@@ -11,6 +11,8 @@ import TableCell from "@mui/material/TableCell";
 import TableContainer from "@mui/material/TableContainer";
 import TableHead from "@mui/material/TableHead";
 import TableRow from "@mui/material/TableRow";
+import LinearProgress from "@mui/material/LinearProgress";
+import Box from "@mui/material/Box";
 import Paper from "@mui/material/Paper";
 import {
   Card,
@@ -30,6 +32,17 @@ const Curriculum = () => {
   const userId = sessionStorage.getItem("userId");
   const navigate = useNavigate();
   const location = useLocation();
+  const [uploading, setUploading] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const [fetchingFiles, setFetchingFiles] = useState(false);
+
+  const LinearIndeterminate = () => {
+    return (
+      <Box sx={{ width: "100%" }}>
+        <LinearProgress color="secondary" />
+      </Box>
+    );
+  };
 
   const [input, setInput] = useState({
     trainingName: "",
@@ -38,6 +51,8 @@ const Curriculum = () => {
     trainingInstitution: "",
     trainingHours: "",
     curriculumDescription: "Type here",
+    curriculumFile: [""],
+    curriculumApproved: "",
   });
 
   useEffect(() => {
@@ -50,13 +65,14 @@ const Curriculum = () => {
     const { name, value } = e.target;
     setInput({ ...input, [name]: value });
   };
-
   const submitClicked = () => {
     try {
       if (location.state && location.state.updateData) {
         axios
           .put(
+            // `/api/updateRequirement/${location.state.updateData._id}`,
             `http://localhost:5000/api/updateRequirement/${location.state.updateData._id}`,
+
             input
           )
           .then((response) => {
@@ -82,7 +98,6 @@ const Curriculum = () => {
 
   // file upload
   const [selectedFile, setSelectedFile] = useState(null);
-  const [uploadStatus, setUploadStatus] = useState("");
   const [filesList, setFilesList] = useState([]);
 
   const handleFileChange = (e) => {
@@ -94,52 +109,139 @@ const Curriculum = () => {
       alert("Please select a file to upload.");
       return;
     }
+    if (
+      input.curriculumApproved === "Approved" &&
+      userId !== "64bf73a1f8cf24a4a8c9118f"
+    ) {
+      alert("Only admin can change this document now");
+    } else {
+      setUploading(true);
+      const formData = new FormData();
+      formData.append("file", selectedFile);
 
-    const formData = new FormData();
-    formData.append("file", selectedFile);
+      try {
+        const response = await axios.post(
+          "http://localhost:5000/upload-file-to-google-drive",
+          formData
+        );
 
-    try {
-      const response = await axios.post(
-        "http://localhost:5000/upload-file-to-google-drive",
-        formData
-      );
-      setUploadStatus(
-        `File uploaded successfully! File ID: ${response.data.fileId}`
-      );
-      setSelectedFile(null); // Clear the selected file after successful upload
-      fetchFilesList(); // Fetch the updated list of files from the server
-    } catch (error) {
-      console.error("Error uploading file:", error);
-      setUploadStatus("Error uploading file. Please try again.");
+        // Update curriculumFile array in the input state
+        const newCurriculumFile = [
+          ...input.curriculumFile,
+          response.data.fileId,
+        ];
+        setInput({
+          ...input,
+          curriculumFile: newCurriculumFile,
+        });
+
+        // Make the server request to update the data
+        try {
+          const updateResponse = await axios.put(
+            `http://localhost:5000/api/updateRequirement/${location.state.updateData._id}`,
+            {
+              ...input,
+              curriculumFile: newCurriculumFile,
+            }
+          );
+
+          if (
+            updateResponse.data.message === "Requirement Updated successfully"
+          ) {
+            alert(updateResponse.data.message);
+          } else {
+            alert(updateResponse.data.message);
+          }
+        } catch (error) {
+          console.log(error);
+        }
+
+        // Display success message and update files list
+        // alert(`File uploaded successfully! File ID: ${response.data.fileId}`);
+        setSelectedFile(null); // Clear the selected file after successful upload
+        fetchFilesList(); // Fetch the updated list of files from the server
+      } catch (error) {
+        console.error("Error uploading file:", error);
+        alert("Error uploading file. Please try again.");
+      } finally {
+        setUploading(false);
+      }
     }
   };
 
   const fetchFilesList = async () => {
     try {
+      setFetchingFiles(true);
+      // const response = await axios.get("/get-files-list");
       const response = await axios.get("http://localhost:5000/get-files-list");
+
       const files = response.data.files;
       const filteredFiles = files.filter(
         (file) => file.id !== "1UveMe0PhoZWzj2BnPO9z8Jge2m80UH1z"
       );
+
       setFilesList(filteredFiles);
+      // setFilesList(filteredFiles);
     } catch (error) {
       console.error("Error fetching files list:", error);
+    } finally {
+      setFetchingFiles(false);
     }
   };
 
   const handleDelete = async (fileId) => {
-    try {
-      const response = await axios.post(
-        `http://localhost:5000/delete-file-from-google-drive/${fileId}`
-      );
-      console.log(response);
-      fetchFilesList(); // Fetch the updated list of files after successful deletion
-    } catch (error) {
-      console.error("Error deleting file:", error);
+    if (
+      input.curriculumApproved === "Approved" &&
+      userId !== "64bf73a1f8cf24a4a8c9118f"
+    ) {
+      alert("Only admin can change this document now");
+    } else {
+      try {
+        setDeleting(true);
+        await axios.post(
+          // `/delete-file-from-google-drive/${fileId}`
+          `http://localhost:5000/delete-file-from-google-drive/${fileId}`
+        );
+
+        // Delete the fileId from the curriculumFile array in the input state
+        const newCurriculumFile = input.curriculumFile.filter(
+          (id) => id !== fileId
+        );
+        setInput({
+          ...input,
+          curriculumFile: newCurriculumFile,
+        });
+
+        // Make the server request to update the data
+        try {
+          const updateResponse = await axios.put(
+            `http://localhost:5000/api/updateRequirement/${location.state.updateData._id}`,
+            {
+              ...input,
+              curriculumFile: newCurriculumFile,
+            }
+          );
+
+          if (
+            updateResponse.data.message === "Requirement Updated successfully"
+          ) {
+            alert("Curriculum deleted successfully");
+          } else {
+            alert(updateResponse.data.message);
+          }
+        } catch (error) {
+          console.log(error);
+        }
+
+        fetchFilesList(); // Fetch the updated list of files after successful deletion
+      } catch (error) {
+        console.error("Error deleting file:", error);
+      } finally {
+        setDeleting(false);
+      }
     }
   };
 
-  // Fetch the initial list of files when the component mounts
   useEffect(() => {
     fetchFilesList();
   }, []);
@@ -167,6 +269,7 @@ const Curriculum = () => {
                         <Grid container spacing={3}>
                           <Grid item xs={12}>
                             <TextField
+                              required
                               className="form-control me-2"
                               name="trainingName"
                               onChange={inputHandler}
@@ -174,8 +277,8 @@ const Curriculum = () => {
                               list="nameOptions"
                               id="exampleNameList"
                               fullWidth
-                              placeholder="Name of Training"
-                              InputProps={{
+                              label="Name of Training"
+                              inputProps={{
                                 readOnly:
                                   userId === "64bf73a1f8cf24a4a8c9118f"
                                     ? false
@@ -184,14 +287,18 @@ const Curriculum = () => {
                             />
                           </Grid>
                           <Grid item xs={12}>
-                            <FormControl variant="outlined" required fullWidth>
+                            <FormControl required fullWidth>
+                              <InputLabel>Area of Training</InputLabel>
                               <Select
+                                // InputLabel="Area of Training"
                                 name="trainingArea"
                                 onChange={inputHandler}
                                 value={input.trainingArea}
+                                label="Area of Training"
                                 list="areaOptions"
                                 id="exampleAreaList"
-                                InputProps={{
+                                variant="outlined"
+                                inputProps={{
                                   readOnly:
                                     userId === "64bf73a1f8cf24a4a8c9118f"
                                       ? false
@@ -208,20 +315,21 @@ const Curriculum = () => {
                             </FormControl>
                           </Grid>
                           <Grid item xs={12}>
-                            <FormControl fullWidth variant="outlined" required>
+                            <FormControl fullWidth required>
+                              <InputLabel>Category of requirement</InputLabel>
                               <Select
                                 name="trainingCategory"
+                                label="Category of requirement"
                                 onChange={inputHandler}
                                 value={input.trainingCategory}
                                 list="categoryOptions"
                                 id="exampleCategoryList"
-                                InputProps={{
+                                inputProps={{
                                   readOnly:
                                     userId === "64bf73a1f8cf24a4a8c9118f"
                                       ? false
                                       : true,
                                 }}
-                                required
                               >
                                 <MenuItem value="Retail">Retail</MenuItem>
                                 <MenuItem value="Academic">Academic</MenuItem>
@@ -234,6 +342,7 @@ const Curriculum = () => {
                           </Grid>
                           <Grid item xs={12}>
                             <TextField
+                              required
                               className="form-control me-2"
                               name="trainingInstitution"
                               onChange={inputHandler}
@@ -241,8 +350,8 @@ const Curriculum = () => {
                               list="institutionOptions"
                               id="exampleInstitutionList"
                               fullWidth
-                              placeholder="Name of Institution"
-                              InputProps={{
+                              label="Name of Institution"
+                              inputProps={{
                                 readOnly:
                                   userId === "64bf73a1f8cf24a4a8c9118f"
                                     ? false
@@ -252,6 +361,7 @@ const Curriculum = () => {
                           </Grid>
                           <Grid item xs={12}>
                             <TextField
+                              required
                               className="form-control"
                               name="trainingHours"
                               onChange={inputHandler}
@@ -259,8 +369,8 @@ const Curriculum = () => {
                               list="datalistOptions"
                               id="exampleDataList"
                               fullWidth
-                              placeholder="No. of hours"
-                              InputProps={{
+                              label="No. of hours"
+                              inputProps={{
                                 readOnly:
                                   userId === "64bf73a1f8cf24a4a8c9118f"
                                     ? false
@@ -274,6 +384,13 @@ const Curriculum = () => {
                   </Grid>
                   <Grid item sm={12} md={6}>
                     <TextField
+                      inputProps={{
+                        readOnly:
+                          input.curriculumApproved === "Approved" &&
+                          userId !== "64bf73a1f8cf24a4a8c9118f"
+                            ? true
+                            : false,
+                      }}
                       label="Description"
                       variant="outlined"
                       style={{ marginTop: 17 }}
@@ -317,44 +434,48 @@ const Curriculum = () => {
               </Grid>
             </Grid>
           </Container>
+          {uploading && <LinearIndeterminate />}
+          {fetchingFiles && <LinearIndeterminate />}
+          {deleting && <LinearIndeterminate />}
           <Container style={{ marginTop: "10px", marginBottom: "20px" }}>
             <TableContainer component={Paper} style={{ margin: "auto" }}>
               <Table sx={{ minWidth: 650 }} aria-label="simple table">
                 <TableHead>
                   <TableRow>
                     <TableCell>Curriculum File</TableCell>
-                    <TableCell align="right">DownloadFile</TableCell>
-                    <TableCell align="right">DeleteFile</TableCell>
+                    <TableCell align="center">DownloadFile</TableCell>
+                    <TableCell align="center">DeleteFile</TableCell>
                   </TableRow>
                 </TableHead>
                 <TableBody>
-                  {filesList.map((file) => (
-                    <TableRow
-                      key={file.id}
-                      sx={{
-                        "&:last-child td, &:last-child th": { border: 0 },
-                      }}
-                    >
-                      <TableCell component="th" scope="row">
-                        {file.name}
-                      </TableCell>
-                      <TableCell align="right">
-                        <a
-                          href={file.webContentLink}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                        >
-                          <DownloadIcon />
-                        </a>
-                      </TableCell>
-                      <TableCell align="right">
-                        {" "}
-                        <RemoveCircleIcon
-                          onClick={() => handleDelete(file.id)}
-                        />
-                      </TableCell>
-                    </TableRow>
-                  ))}
+                  {filesList
+                    .filter((file) => input.curriculumFile.includes(file.id))
+                    .map((file) => (
+                      <TableRow
+                        key={file.id}
+                        sx={{
+                          "&:last-child td, &:last-child th": { border: 0 },
+                        }}
+                      >
+                        <TableCell component="th" scope="row">
+                          {file.name}
+                        </TableCell>
+                        <TableCell align="center">
+                          <a
+                            href={file.webContentLink}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                          >
+                            <DownloadIcon />
+                          </a>
+                        </TableCell>
+                        <TableCell align="center">
+                          <RemoveCircleIcon
+                            onClick={() => handleDelete(file.id)}
+                          />
+                        </TableCell>
+                      </TableRow>
+                    ))}
                 </TableBody>
               </Table>
             </TableContainer>

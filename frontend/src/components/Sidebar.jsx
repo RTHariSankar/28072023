@@ -24,6 +24,7 @@ const Sidebar = () => {
   const userId = sessionStorage.getItem('userId')
   const navigate = useNavigate()
   const logout = ()=>{
+    sessionStorage.clear();
     navigate('/')
   }
   const reqFormNav = ()=>{
